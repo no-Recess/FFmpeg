@@ -399,7 +399,7 @@ static int vorbis_header(AVFormatContext *s, int idx)
         return AVERROR_INVALIDDATA;
 
     if (priv->packet[pkt_type >> 1])
-        return AVERROR_INVALIDDATA;
+        return 1; // RT Fix: skip duplicate header
     if (pkt_type > 1 && !priv->packet[0] || pkt_type > 3 && !priv->packet[1])
         return priv->vp ? 0 : AVERROR_INVALIDDATA;
 
@@ -430,7 +430,7 @@ static int vorbis_header(AVFormatContext *s, int idx)
         int ret;
 
         if (priv->vp)
-             return AVERROR_INVALIDDATA;
+             return 1; // RT Fix: skip duplicate setup
 
         ret = fixup_vorbis_headers(s, priv, &st->codecpar->extradata);
         if (ret < 0) {
@@ -480,19 +480,22 @@ static int vorbis_packet(AVFormatContext *s, int idx)
             os->pflags |= AV_PKT_FLAG_CORRUPT;
             return 0;
         } else if (flags & VORBIS_FLAG_COMMENT) {
-            vorbis_update_metadata(s, idx);
+            // Metadata is parsed when this packet becomes current. The page
+            // lookahead still points os->pstart at a different packet.
             flags = 0;
         }
         duration += d;
         last_pkt = next_pkt =  next_pkt + os->psize;
         for (; seg < os->nsegs; seg++) {
             if (os->segments[seg] < 255) {
+                flags = 0; // RT Fix: flags belong to one packet only
                 int d = av_vorbis_parse_frame_flags(priv->vp, last_pkt, 1, &flags);
                 if (d < 0) {
                     duration = os->granule;
                     break;
                 } else if (flags & VORBIS_FLAG_COMMENT) {
-                    vorbis_update_metadata(s, idx);
+                    // Avoid parsing metadata through the current packet's
+                    // os->pstart while looking ahead at a later packet.
                     flags = 0;
                 }
                 duration += d;
@@ -517,6 +520,7 @@ static int vorbis_packet(AVFormatContext *s, int idx)
 
     /* parse packet duration */
     if (os->psize > 0) {
+        flags = 0; // RT Fix: discard flags accumulated while scanning the page
         duration = av_vorbis_parse_frame_flags(priv->vp, os->buf + os->pstart, 1, &flags);
         if (duration < 0) {
             os->pflags |= AV_PKT_FLAG_CORRUPT;

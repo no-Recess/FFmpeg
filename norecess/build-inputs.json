@@ -1,0 +1,11 @@
+{
+  "upstream_tag": "n8.1.2",
+  "upstream_commit": "38b88335f99e76ed89ff3c93f877fdefce736c13",
+  "release_archive_sha256": "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c",
+  "libraries": {
+    "libavcodec.62.28.102.dylib": "dde6e787202e4645a0108c0110cea31b20770af0b39b54a39d007e87fbf9a251",
+    "libavformat.62.12.102.dylib": "4048d431689c002848b4b942b2d6c00cf5eb698d0560fb8e9acebd4906e21f68",
+    "libavutil.60.26.102.dylib": "944fd4e6c575e1516246522a222233c1ab1563ada2352b8767b78bfd1e208934",
+    "libswresample.6.3.102.dylib": "bba4834911d8f2d81231d137386f290a09e3e7e1d682c606baba18db91aad29b"
+  }
+}

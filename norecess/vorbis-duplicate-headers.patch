@@ -1,0 +1,20 @@
+--- a/libavformat/oggparsevorbis.c
++++ b/libavformat/oggparsevorbis.c
+@@ -402 +402 @@
+-        return AVERROR_INVALIDDATA;
++        return 1; // RT Fix: skip duplicate header
+@@ -433 +433 @@
+-             return AVERROR_INVALIDDATA;
++             return 1; // RT Fix: skip duplicate setup
+@@ -483 +483,2 @@
+-            vorbis_update_metadata(s, idx);
++            // Metadata is parsed when this packet becomes current. The page
++            // lookahead still points os->pstart at a different packet.
+@@ -489,0 +491 @@
++                flags = 0; // RT Fix: flags belong to one packet only
+@@ -495 +497,2 @@
+-                    vorbis_update_metadata(s, idx);
++                    // Avoid parsing metadata through the current packet's
++                    // os->pstart while looking ahead at a later packet.
+@@ -519,0 +523 @@
++        flags = 0; // RT Fix: discard flags accumulated while scanning the page
